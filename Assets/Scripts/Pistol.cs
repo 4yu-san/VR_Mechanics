@@ -4,6 +4,7 @@ using UnityEngine.XR.Interaction.Toolkit;
 [RequireComponent(typeof(AudioSource))]
 public class Pistol : MonoBehaviour
 {
+    [Header("Bullet Settings")]
     public GameObject bulletPrefab;
     public Transform firePoint;
     public float bulletSpeed = 20f;
