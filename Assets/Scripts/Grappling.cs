@@ -5,7 +5,10 @@ public class Grappling: MonoBehaviour
 {
     public Transform StartGrappleHand;
     public float maxDistance = 35f;
-    public float pullingStrength = 500f;
+    public float pullSpeed = 15f;      // meters/sec the rope shortens
+    public float minGrappleDistance = 1f;
+    private float currentGrappleDistance;
+    //public float pullingStrength = 500f;
     public LayerMask Grappleable;
     public InputActionProperty GrappleAction;
     public InputActionProperty PullAction;
@@ -37,11 +40,8 @@ public class Grappling: MonoBehaviour
         
         if(PullAction.action.IsPressed())
         {
-            Vector3 direction = (grapplePoint - StartGrappleHand.position).normalized;
-            playerrb.AddForce(direction * pullingStrength * Time.deltaTime);
-
-            float distance = Vector3.Distance(playerrb.position, grapplePoint);
-            joint.maxDistance = distance;
+            currentGrappleDistance = Mathf.Max(currentGrappleDistance - pullSpeed * Time.deltaTime, minGrappleDistance);
+            joint.maxDistance = currentGrappleDistance;
 
         }
     }
@@ -52,10 +52,10 @@ public class Grappling: MonoBehaviour
             joint.autoConfigureConnectedAnchor = false;
             joint.connectedAnchor = grapplePoint;
 
-            float distance = Vector3.Distance(playerrb.position, grapplePoint);
-            joint.maxDistance = distance;
+            currentGrappleDistance = Vector3.Distance(playerrb.position, grapplePoint);
+            joint.maxDistance = currentGrappleDistance;
 
-            joint.spring = 4.5f;
+            joint.spring = 10f;
             joint.damper = 7;
             joint.massScale = 4.5f;
         }
