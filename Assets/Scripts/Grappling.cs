@@ -5,7 +5,7 @@ public class Grappling: MonoBehaviour
 {
     public Transform StartGrappleHand;
     public float maxDistance = 35f;
-    public float pullingStrength;
+    public float pullingStrength = 500f;
     public LayerMask Grappleable;
     public InputActionProperty GrappleAction;
     public InputActionProperty PullAction;
