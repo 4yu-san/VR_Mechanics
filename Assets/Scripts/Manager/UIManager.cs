@@ -88,7 +88,11 @@ public class UIManager : MonoBehaviour
     {
         GameManager.instance.SetState(GameManager.GameState.GameOver);
         levelCompleteTimer.text = "Time : " + FormatTime(GameManager.instance.finalTime);
-        nextLevelButton.SetActive(SceneManager.GetActiveScene().buildIndex + 1 < SceneManager.sceneCountInBuildSettings);
+        // Generated-levels mode rebuilds the same scene in place, so there is no "next build index" -
+        // show the button whenever a LevelProgressManager is driving the loop, scene-chaining otherwise.
+        bool hasNextScene = SceneManager.GetActiveScene().buildIndex + 1 < SceneManager.sceneCountInBuildSettings;
+        bool hasGeneratedProgress = GeneratedLevels.LevelProgressManager.instance != null;
+        nextLevelButton.SetActive(hasNextScene || hasGeneratedProgress);
         ShowPanel(levelCompleteScreen);
     }
 

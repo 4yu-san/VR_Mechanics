@@ -15,3 +15,4 @@ public class EndLvl : MonoBehaviour
         GameManager.instance.LevelCompleted();
     }
 }
+
