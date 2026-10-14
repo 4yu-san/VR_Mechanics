@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainMenu.unity
+    guid: 77572fc4f0b75af33bd7ec75aaa96fbf
+  - enabled: 1
+    path: Assets/Scenes/New Grapple.unity
+    guid: e49115d0ab34e9c44bc50ebdd3c86ada
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

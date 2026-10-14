@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class Grappling: MonoBehaviour
 {
     public Transform StartGrappleHand;
-    public float maxDistance = 35f;
+    public float maxDistance = 25f;
     public float pullSpeed = 15f;      // meters/sec the rope shortens
     public float minGrappleDistance = 1f;
     private float currentGrappleDistance;

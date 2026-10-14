@@ -1,25 +1,17 @@
-using JetBrains.Annotations;
 using UnityEngine;
 
+// On the "Level End" object (collider set to Is Trigger).
+// When any part of the physics rig enters it, the level is completed.
 public class EndLvl : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void OnTriggerEnter(Collider other)
     {
-        
-    }
+        // Every rig collider (body, head, hands) lives under the PhysicsRig object
+        if (other.GetComponentInParent<PhysicsRig>() == null) return;
 
-    // Update is called once per frame
-    void Update()
-    {
-     
-        void OnTriggerEnter(Collider other)
-        {
-            if (other.CompareTag("Body"))
-            {
-                Debug.Log("Level Complete!");
-                // Add your level completion logic here, such as loading the next level or displaying a victory screen.
-            }
-        }
+        // Several rig colliders can enter in the same frame, only react once
+        if (GameManager.instance.State != GameManager.GameState.Playing) return;
+
+        GameManager.instance.LevelCompleted();
     }
 }
