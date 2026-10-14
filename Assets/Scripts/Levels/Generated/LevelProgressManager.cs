@@ -27,24 +27,35 @@ namespace GeneratedLevels
         [SerializeField] private bool loopAtEnd = true;
 
         private int currentIndex = -1;
+        private InputAction skipAction;
 
         public static LevelProgressManager instance { get; private set; }
 
         void Awake()
         {
             instance = this;
+
+            // Debug shortcut: B on the right Touch controller (secondary button), with L on the
+            // keyboard kept as a fallback for Editor/Simulator testing without a headset.
+            skipAction = new InputAction("SkipLevel", InputActionType.Button);
+            skipAction.AddBinding("<XRController>{RightHand}/{SecondaryButton}");
+            skipAction.AddBinding("<XRController>{RightHand}/secondaryButton");
+            skipAction.AddBinding("<Keyboard>/l");
+            skipAction.performed += OnSkipPressed;
         }
+
+        void OnEnable() => skipAction.Enable();
+        void OnDisable() => skipAction.Disable();
+        void OnDestroy() => skipAction.Dispose();
 
         void Start()
         {
             Advance();
         }
 
-        void Update()
+        void OnSkipPressed(InputAction.CallbackContext ctx)
         {
-            // Debug shortcut: press L at any time to skip straight to the next level.
-            if (Keyboard.current != null && Keyboard.current.lKey.wasPressedThisFrame)
-                Advance();
+            Advance();
         }
 
         public void Advance()
