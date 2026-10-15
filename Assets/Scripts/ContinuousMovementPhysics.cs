@@ -19,9 +19,15 @@ public class ContinuousMovementPhysics : MonoBehaviour
 
     private void FixedUpdate()
     {
+        // No input: leave velocity to physics (gravity, grapple swing)
+        if (inputAxis.sqrMagnitude < 0.01f)
+            return;
+
         Quaternion yaw = Quaternion.Euler(0, directionSource.eulerAngles.y, 0);
         Vector3 direction = yaw * new Vector3(inputAxis.x, 0, inputAxis.y);
 
-        rb.MovePosition(rb.position + direction * Time.fixedDeltaTime * speed);
+        // Drive horizontal velocity only; keep y so gravity keeps acting
+        Vector3 targetVelocity = direction * speed;
+        rb.linearVelocity = new Vector3(targetVelocity.x, rb.linearVelocity.y, targetVelocity.z);
     }
 }
