@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "name": "Rusted Ramps",
+  "theme": "ruined industrial rooftops",
+  "seed": 60820,
+  "start": {
+    "position": [
+      0.0,
+      1.5,
+      0.0
+    ],
+    "yaw": 0
+  },
+  "killFloorY": -43.0,
+  "pieces": [
+    {
+      "id": "p0",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "size": [
+        3.0,
+        1.0,
+        3.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p1",
+      "type": "pillar",
+      "position": [
+        0.0,
+        -3.5,
+        8.0
+      ],
+      "size": [
+        3.0,
+        5.0,
+        3.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p2",
+      "type": "wall",
+      "position": [
+        0.0,
+        -5.0,
+        12.0
+      ],
+      "size": [
+        6.0,
+        8.0,
+        1.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p3",
+      "type": "platform",
+      "position": [
+        0.0,
+        -1.5,
+        16.5
+      ],
+      "size": [
+        8.0,
+        1.0,
+        8.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p4",
+      "type": "pillar",
+      "position": [
+        0.0,
+        -8.0,
+        32.5
+      ],
+      "size": [
+        4.0,
+        10.0,
+        4.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p5",
+      "type": "wall",
+      "position": [
+        0.0,
+        -10.5,
+        39.75
+      ],
+      "size": [
+        6.0,
+        15.0,
+        0.5
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p6",
+      "type": "platform",
+      "position": [
+        0.0,
+        -3.5,
+        46.0
+      ],
+      "size": [
+        12.0,
+        1.0,
+        12.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p7",
+      "type": "goal",
+      "position": [
+        0.0,
+        -1.5,
+        69.0
+      ],
+      "size": [
+        10.0,
+        1.0,
+        10.0
+      ],
+      "yaw": 0
+    }
+  ],
+  "generator": {
+    "backend": "ollama",
+    "model": "qwen2.5:1.5b",
+    "difficulty": 1
+  }
+}

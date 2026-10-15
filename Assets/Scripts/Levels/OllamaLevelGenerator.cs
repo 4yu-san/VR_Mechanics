@@ -14,7 +14,7 @@ using UnityEngine;
 public class OllamaLevelGenerator
 {
     public string baseUrl = "http://localhost:11434";
-    public string model = "qwen2.5:14b";
+    public string model = "qwen2.5-coder:7b";
     public int maxAttempts = 4;
     public float temperature = 0.8f;
     public int contextSize = 8192;
@@ -80,6 +80,12 @@ public class OllamaLevelGenerator
                 }
 
                 Log($"Attempt {attempt}: invalid.\n{check}");
+                // Keep the conversation bounded to system + original request + the single most recent
+                // failed reply/feedback pair. Appending every attempt forever (instead of replacing)
+                // used to grow unbounded and eventually push the system prompt (the rules + example)
+                // out of the model's context window, after which it just echoed back the same invalid
+                // JSON every remaining attempt with no way to see what to fix.
+                if (messages.Count > 2) messages.RemoveRange(2, messages.Count - 2);
                 messages.Add(new ChatMessage("assistant", reply));
                 messages.Add(new ChatMessage("user", "That level is not valid:\n- " + string.Join("\n- ", check.errors) +
                                                      "\nFix these problems and reply with the complete corrected JSON object only."));

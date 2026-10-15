@@ -6,7 +6,7 @@ using UnityEngine;
 public class LevelGeneratorWindow : EditorWindow
 {
     string baseUrl = "http://localhost:11434";
-    string model = "qwen2.5:14b";
+    string model = "qwen2.5-coder:7b";
     string levelName = "Generated Level 01";
     string request = "";
     int maxAttempts = 4;

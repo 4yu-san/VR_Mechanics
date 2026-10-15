@@ -80,7 +80,10 @@ public static class LevelValidator
 
         // 1. Each platform is well-formed and inside the allowed area
         var boxes = new List<Box>();
-        var outside = new List<int>();
+        var tooFarX = new List<int>();
+        var tooFarZ = new List<int>();
+        var tooHigh = new List<int>();
+        var tooLow = new List<int>();
         var behind = new List<int>();
         var badSize = new List<int>();
         float lowest = float.MaxValue, highest = float.MinValue, leftmost = float.MaxValue, rightmost = float.MinValue;
@@ -92,7 +95,12 @@ public static class LevelValidator
 
             var pos = p.Position;
             var size = p.Size;
-            if (Mathf.Abs(pos.x) > rules.maxHorizontal || Mathf.Abs(pos.z) > rules.maxHorizontal || pos.y < rules.minY || pos.y > rules.maxY) outside.Add(i);
+            // Checked and reported separately (not lumped into one "outside" bucket) so the feedback
+            // sent back to the model names the axis that actually failed, not always height.
+            if (Mathf.Abs(pos.x) > rules.maxHorizontal) tooFarX.Add(i);
+            if (Mathf.Abs(pos.z) > rules.maxHorizontal) tooFarZ.Add(i);
+            if (pos.y > rules.maxY) tooHigh.Add(i);
+            if (pos.y < rules.minY) tooLow.Add(i);
             if (pos.x > rules.maxBehindStart) behind.Add(i);
             if (size.x < rules.minPlatformSize || size.y < rules.minPlatformSize || size.z < rules.minPlatformSize ||
                 size.x > rules.maxPlatformSize || size.y > rules.maxPlatformSize || size.z > rules.maxPlatformSize) badSize.Add(i);
@@ -100,9 +108,14 @@ public static class LevelValidator
             leftmost = Mathf.Min(leftmost, pos.z); rightmost = Mathf.Max(rightmost, pos.z);
             boxes.Add(Box.From(pos, size, p.yaw));
         }
-        if (outside.Count > 0)
-            result.errors.Add($"Platforms {Indices(outside)} are outside the allowed area. Every platform needs |x| <= {rules.maxHorizontal}, |z| <= {rules.maxHorizontal} and y between {rules.minY} and {rules.maxY}. " +
-                              $"Your highest platform is at y = {highest:F1}; climb less per step so the whole level stays under y = {rules.maxY}.");
+        if (tooFarX.Count > 0)
+            result.errors.Add($"Platforms {Indices(tooFarX)} have |x| > {rules.maxHorizontal}. Move them sideways-in-x so |x| <= {rules.maxHorizontal}.");
+        if (tooFarZ.Count > 0)
+            result.errors.Add($"Platforms {Indices(tooFarZ)} have |z| > {rules.maxHorizontal}. Move them sideways-in-z so |z| <= {rules.maxHorizontal}.");
+        if (tooHigh.Count > 0)
+            result.errors.Add($"Platforms {Indices(tooHigh)} are above y = {rules.maxY} (highest is y = {highest:F1}). Climb less per step so the whole level stays under y = {rules.maxY}.");
+        if (tooLow.Count > 0)
+            result.errors.Add($"Platforms {Indices(tooLow)} are below y = {rules.minY} (lowest is y = {lowest:F1}). Raise them so every platform has y >= {rules.minY}.");
         if (behind.Count > 0)
             result.errors.Add($"Platforms {Indices(behind)} are behind the start slab (x > {rules.maxBehindStart}). The level must run toward NEGATIVE x, so every platform needs x <= {rules.maxBehindStart}.");
         if (badSize.Count > 0)
@@ -155,14 +168,33 @@ public static class LevelValidator
         if (!reached[endNode])
         {
             result.errors.Add($"The Level End at {Fmt(endPos)} cannot be reached from the start: no chain of platforms with gaps of at most {rules.maxStep} m leads to it.");
-            // Help the model fix it: say how far the closest reachable platform is
+            // Help the model fix it: say how far the closest reachable platform is, AND whether moving
+            // the goal alone can even work - if the closest platform is too far toward +x to ever reach
+            // a legal goal (x <= -minEndDistance) within maxStep, say so explicitly with a target x,
+            // otherwise the model tends to just nudge the goal back and forth forever without realising
+            // the chain itself needs to be extended first.
             float best = float.MaxValue; int bestIndex = -1;
             for (int i = 0; i < nodes.Count - 1; i++)
                 if (reached[i] && nodes[i].Gap(end) < best) { best = nodes[i].Gap(end); bestIndex = i; }
-            result.errors.Add(bestIndex == 0
-                ? $"The closest reachable thing to the Level End is the start slab, {best:F1} m away. Build a chain of platforms toward the goal, or move the goal closer."
-                : $"The closest reachable platform to the Level End is platform {bestIndex - 1} at {Fmt(boxes[bestIndex - 1].center)}, {best:F1} m away. " +
-                  $"Move the goal to within 5 m of that platform (or of the last platform in your chain), or add platforms that lead to it.");
+
+            Vector3 anchor = bestIndex == 0 ? level.StartPosition : boxes[bestIndex - 1].center;
+            string anchorLabel = bestIndex == 0 ? "the start slab" : $"platform {bestIndex - 1}";
+            float safeMargin = rules.maxStep * 0.6f;
+            bool canReachLegalGoal = anchor.x - safeMargin <= -rules.minEndDistance;
+
+            if (canReachLegalGoal)
+            {
+                var suggestion = new Vector3(Mathf.Min(anchor.x - safeMargin, -rules.minEndDistance), anchor.y, anchor.z);
+                result.errors.Add($"The closest reachable thing to the Level End is {anchorLabel} at {Fmt(anchor)}, {best:F1} m away (limit is {rules.maxStep} m). " +
+                                  $"Move the goal to around {Fmt(suggestion)} instead, or add one more platform between {anchorLabel} and the goal.");
+            }
+            else
+            {
+                float targetX = -rules.minEndDistance + safeMargin;
+                result.errors.Add($"The closest reachable thing to the Level End is {anchorLabel} at {Fmt(anchor)}. That is too far toward +x to ever reach a legal goal " +
+                                  $"(goal needs x <= {-rules.minEndDistance}, but {anchorLabel} is only within {rules.maxStep} m of goals down to about x = {anchor.x - rules.maxStep:F1}). " +
+                                  $"First move {anchorLabel} (or add a new platform after it) further toward -x, to about x = {targetX:F1}, THEN place the goal within {rules.maxStep} m of that.");
+            }
         }
         for (int i = 1; i < endNode; i++)
             if (!reached[i]) result.warnings.Add($"Platform {i - 1} at {Fmt(boxes[i - 1].center)} cannot be reached (unused).");
