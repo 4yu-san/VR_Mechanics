@@ -98,8 +98,8 @@ namespace MultiGoalLevels
             var messages = new List<ChatMessage>
             {
                 new ChatMessage("system", BuildSystemPrompt(settings)),
-                new ChatMessage("user", $"Design the paths.\nRequest: {(string.IsNullOrWhiteSpace(request) ? "a fun, varied level" : request)}\n" +
-                                        $"Give exactly {settings.goalCount} paths. Reply with the JSON object only."),
+                new ChatMessage("user", $"Design the routes.\nRequest: {(string.IsNullOrWhiteSpace(request) ? "a fun, varied level" : request)}\n" +
+                                        $"Give every goal (0 to {settings.goalCount - 1}) {settings.minRoutes} to {settings.maxRoutes} different routes. Reply with the JSON object only."),
             };
 
             using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(timeoutSeconds) })
@@ -124,7 +124,7 @@ namespace MultiGoalLevels
                         result.success = true;
                         result.plan = plan;
                         result.layout = layout;
-                        Log($"Attempt {attempt}: valid, {layout.cubes.Count} platforms over {settings.goalCount} paths.");
+                        Log($"Attempt {attempt}: valid, {layout.cubes.Count} platforms, {plan.paths.Length} routes to {settings.goalCount} goals.");
                         return;
                     }
 
@@ -148,34 +148,39 @@ namespace MultiGoalLevels
             return
 "You design levels for a VR grappling-hook game. You reply with ONE JSON object and nothing else.\n" +
 "\n" +
-$"THE LEVEL: the player starts on a platform. There are {n} goals, all {s.goalDistance:0} m from the start, spread in an arc\n" +
-"from left to right. The space between the start and the goals is filled with a DENSE FIELD of small floating\n" +
-"platforms that the player grapples across, with many possible routes. For EACH goal you describe one CORRIDOR of\n" +
-"that field leading to it. Code fills each corridor with platforms - you only describe its shape. Corridors start\n" +
-"together at the start platform, so they merge into one shared field near the start and split toward the goals.\n" +
+$"THE LEVEL: the player starts on a platform. There are {n} goals, numbered 0 to {n - 1} from left to right, all\n" +
+$"{s.goalDistance:0} m from the start. The space between the start and the goals is filled with a DENSE 3D FIELD of\n" +
+"small floating platforms that the player grapples across. You describe ROUTES through that field: every goal\n" +
+$"needs {s.minRoutes} to {s.maxRoutes} DIFFERENT routes leading to it. Code fills each route with platforms - you only\n" +
+"describe its shape. All routes start at the start platform, so they merge into one shared field near the start\n" +
+"and split apart toward the goals.\n" +
 "\n" +
-"A corridor follows a curve from the start (t = 0) to its goal (t = 1). Without waypoints it is a straight line.\n" +
+"A route follows a curve from the start (t = 0) to its goal (t = 1). Without waypoints it is a straight line.\n" +
 "Bend it with waypoints, each with:\n" +
-"- \"t\": how far along, from 0.1 to 0.9. Increasing within a corridor.\n" +
+"- \"t\": how far along, from 0.1 to 0.9. Increasing within a route.\n" +
 $"- \"side\": metres sideways from the straight line, from -{s.maxSide:0} to {s.maxSide:0}. Positive = right (looking from the start toward the goal).\n" +
-$"- \"up\": metres above the straight line, from -{s.heightVariation:0.#} to {s.heightVariation:0.#}. Keep it gentle - the field is mostly flat.\n" +
-"Each corridor also has:\n" +
-$"- \"width\": how wide the field is along this corridor, from {s.minWidth:0} to {s.maxWidth:0} metres. Wider = more routes.\n" +
+$"- \"up\": metres above the straight line, from -{s.heightVariation:0.#} to {s.heightVariation:0.#}. Use the full range: climbs, towers and dips.\n" +
+"Each route also has:\n" +
+$"- \"goal\": which goal it leads to, 0 to {n - 1}.\n" +
+$"- \"width\": how wide the field is along this route, from {s.minWidth:0} to {s.maxWidth:0} metres.\n" +
 $"- \"spacing\": metres between neighbouring platforms, from {s.minSpacing:0} to {s.maxSpacing:0}. Smaller = denser.\n" +
-"Give each corridor 1 to 4 waypoints.\n" +
+"Give each route 1 to 4 waypoints.\n" +
 "\n" +
 "RULES (the level is rejected if it breaks one):\n" +
-$"1. \"paths\" has EXACTLY {n} entries, in order from the leftmost goal to the rightmost goal.\n" +
-"2. Every goal must stay reachable: avoid very sharp bends (big opposite \"side\" values on waypoints close together).\n" +
+$"1. Every goal 0 to {n - 1} has {s.minRoutes} to {s.maxRoutes} routes in \"paths\".\n" +
+$"2. Routes to the SAME goal must be clearly different: somewhere along the way they must be at least {s.minRouteSeparation:0} m\n" +
+"   apart. Easiest: one route curves left (negative side) and another curves right (positive side), or one goes\n" +
+"   high (up +5 or more) and another goes low (negative up).\n" +
+"3. Every goal must stay reachable: avoid very sharp bends (big opposite \"side\" values on waypoints close together).\n" +
 "\n" +
-"DESIGN: make the corridors feel different. For example: one wide and dense field (width 12+, spacing near the\n" +
-"minimum), one narrow winding trail (width near the minimum, side alternating + and -), one with a gentle rise and\n" +
-"dip. Do not reuse the same numbers for every corridor.\n" +
+"DESIGN: make the routes feel different: a high route that climbs and drops onto the goal, a low route that weaves\n" +
+"sideways, a wide dense field (width 12+, spacing near the minimum), a narrow trail (width near the minimum).\n" +
+"Do not reuse the same numbers for every route.\n" +
 "\n" +
-"FORMAT (example with 2 corridors - yours must have " + n + "):\n" +
-"{\"name\": \"Stepping Stones\", \"paths\": [\n" +
-"  {\"spacing\": 3.5, \"width\": 12, \"waypoints\": [{\"t\": 0.4, \"side\": -5, \"up\": 1}, {\"t\": 0.75, \"side\": -2, \"up\": 2}]},\n" +
-"  {\"spacing\": 5, \"width\": 6, \"waypoints\": [{\"t\": 0.3, \"side\": 4, \"up\": -1}, {\"t\": 0.55, \"side\": -3, \"up\": 1.5}, {\"t\": 0.8, \"side\": 5, \"up\": 0}]}\n" +
+$"FORMAT (example for 1 goal with 2 routes - yours must cover goals 0 to {n - 1}):\n" +
+"{\"name\": \"Twin Ways\", \"paths\": [\n" +
+"  {\"goal\": 0, \"spacing\": 3, \"width\": 12, \"waypoints\": [{\"t\": 0.35, \"side\": -9, \"up\": 3}, {\"t\": 0.7, \"side\": -6, \"up\": 7}]},\n" +
+"  {\"goal\": 0, \"spacing\": 4, \"width\": 7, \"waypoints\": [{\"t\": 0.3, \"side\": 6, \"up\": -3}, {\"t\": 0.55, \"side\": 10, \"up\": -1}, {\"t\": 0.8, \"side\": 4, \"up\": 2}]}\n" +
 "]}";
         }
 

@@ -44,8 +44,12 @@ public class MultiGoalLevelWindow : EditorWindow
     float grappleRange = 25f;
     float rigHeight = 0.86f;
     float floorClearanceMultiplier = 2f;
-    float heightVariation = 2.5f;
-    float heightJitter = 0.75f;
+    int minRoutes = 2, maxRoutes = 3;
+    float minRouteSeparation = 10f;
+    float heightVariation = 8f;
+    float verticalSpread = 5f;
+    float heightJitter = 1.5f;
+    float maxDrop = 10f;
     float endGap = 0.3f;
     float maxStep = 15f;
     int seed = 0;
@@ -85,8 +89,16 @@ public class MultiGoalLevelWindow : EditorWindow
         EditorGUILayout.MinMaxSlider(new GUIContent($"Spacing {minSpacing:0.#}-{maxSpacing:0.#} m", "Distance between neighbouring cubes (the LLM picks within it). Smaller = denser."), ref minSpacing, ref maxSpacing, 2f, 8f);
         EditorGUILayout.MinMaxSlider(new GUIContent($"Width {minWidth:0}-{maxWidth:0} m", "How wide each corridor of the field can be (the LLM picks within it)"), ref minWidth, ref maxWidth, 2f, 30f);
         density = EditorGUILayout.Slider(new GUIContent("Density", "How full each corridor gets. 1 = loose, 2 = as packed as the spacing allows."), density, 0.5f, 2.5f);
-        heightVariation = EditorGUILayout.Slider(new GUIContent("Height variation (m)", "How far the field may rise or dip. 0 = flat."), heightVariation, 0f, 10f);
-        heightJitter = EditorGUILayout.Slider(new GUIContent("Height jitter (m)", "Random up/down offset per cube"), heightJitter, 0f, 2f);
+        minRoutes = EditorGUILayout.IntSlider(new GUIContent("Min routes per end", "Every Level End gets at least this many different routes"), minRoutes, 1, 4);
+        maxRoutes = Mathf.Max(minRoutes, EditorGUILayout.IntSlider(new GUIContent("Max routes per end"), maxRoutes, 1, 5));
+        minRouteSeparation = EditorGUILayout.Slider(new GUIContent("Route separation (m)", "Routes to the same Level End must be at least this far apart somewhere"), minRouteSeparation, 3f, 30f);
+
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("Height", EditorStyles.boldLabel);
+        heightVariation = EditorGUILayout.Slider(new GUIContent("Height variation (m)", "How far routes may climb or dip (the LLM's \"up\" range). 0 = flat."), heightVariation, 0f, 20f);
+        verticalSpread = EditorGUILayout.Slider(new GUIContent("Layer thickness (m)", "Cubes in each corridor are spread over this many metres vertically"), verticalSpread, 0f, 12f);
+        heightJitter = EditorGUILayout.Slider(new GUIContent("Height jitter (m)", "Random up/down offset per cube"), heightJitter, 0f, 4f);
+        maxDrop = EditorGUILayout.Slider(new GUIContent("Max drop (m)", "Cubes never go more than this below the Start Platform's top"), maxDrop, 0f, 30f);
         maxStep = EditorGUILayout.Slider(new GUIContent("Max hop (m)", "The Level Ends must be reachable from the Start Platform with no hop longer than this"), maxStep, 5f, 25f);
         endGap = EditorGUILayout.Slider(new GUIContent("Level End gap (m)", "Space between the top of each Level End and the Cube (7) above it"), endGap, 0f, 3f);
 
@@ -130,8 +142,13 @@ public class MultiGoalLevelWindow : EditorWindow
         grappleRange = grappleRange,
         rigHeight = rigHeight,
         floorClearanceMultiplier = floorClearanceMultiplier,
+        minRoutes = minRoutes,
+        maxRoutes = maxRoutes,
+        minRouteSeparation = minRouteSeparation,
         heightVariation = heightVariation,
+        verticalSpread = verticalSpread,
         heightJitter = heightJitter,
+        maxDrop = maxDrop,
         endGap = endGap,
         maxStep = maxStep,
     };
@@ -262,14 +279,24 @@ public class MultiGoalLevelWindow : EditorWindow
             Object.DestroyImmediate(go);
 
         const string letters = "ABCDEFGHIJ";
-        var perPath = new int[layout.goals.Count];
+        // Names: "Cube (7) B2-07" = goal B, its 2nd route, 7th cube; "Cube (7) B landing" sits on Level End B
+        var routeNumber = new Dictionary<int, int>();   // plan route index -> route number within its goal
+        var routesPerGoal = new int[layout.goals.Count];
+        var cubesPerRoute = new Dictionary<int, int>();
         foreach (var c in layout.cubes)
         {
             var go = (GameObject)PrefabUtility.InstantiatePrefab(cubePrefab, scene);
             go.transform.SetParent(map, true);
             // yaw 0 keeps the prefab's own rotation, so every cube faces the same way
             go.transform.SetPositionAndRotation(c.position, cubePrefab.transform.rotation * Quaternion.Euler(0f, c.yaw, 0f));
-            go.name = c.landing ? $"Cube (7) {letters[c.path]} landing" : $"Cube (7) {letters[c.path]}{++perPath[c.path]:00}";
+            if (c.landing)
+            {
+                go.name = $"Cube (7) {letters[c.goal]} landing";
+                continue;
+            }
+            if (!routeNumber.ContainsKey(c.route)) routeNumber[c.route] = ++routesPerGoal[c.goal];
+            cubesPerRoute[c.route] = cubesPerRoute.TryGetValue(c.route, out int n) ? n + 1 : 1;
+            go.name = $"Cube (7) {letters[c.goal]}{routeNumber[c.route]}-{cubesPerRoute[c.route]:00}";
         }
         for (int i = 0; i < layout.goals.Count; i++)
         {

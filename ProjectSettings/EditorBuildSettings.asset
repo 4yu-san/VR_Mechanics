@@ -66,6 +66,21 @@ EditorBuildSettings:
     path: Assets/Scenes/Levels/Multi Goal 17.unity
     guid: 2ed01f065af732b45ad42eeb43a90aac
   - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 18.unity
+    guid: 190bbecb78b2c504aa2d857b3d0e18f7
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 19.unity
+    guid: 8d8dea23891bbdd45bd7e69149c3f0aa
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 20.unity
+    guid: abdd2a13869e4d146b411c38186d8e10
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 21.unity
+    guid: 8f2e236d7a6b2d749a76ea3bc0876cdf
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 22.unity
+    guid: 38b337ebfb078934595c1ab2016e9212
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:
