@@ -115,7 +115,11 @@ def mock_plan(rng, length, difficulty, prof):
         if hard:
             gap, rise = rng.uniform(prof["jumpGapMax"] + 2, 10 + 4 * difficulty), rng.uniform(-2, 8)
         else:
-            gap, rise = rng.uniform(1.5, prof["jumpGapMax"] - 1), rng.uniform(-3, 1.5)
+            # max(1.5, ...) guards against a profile with a small/zero jumpGapMax (e.g. this project's,
+            # since there is no real jump) - jumpGapMax - 1 would otherwise go negative, and
+            # random.uniform(a, b) happily returns values in [b, a] even when b < a, producing a
+            # negative gap that crashes Step's validation (gap must be >= 0).
+            gap, rise = rng.uniform(1.0, max(1.5, prof["jumpGapMax"] - 1)), rng.uniform(-3, 1.5)
         turn = rng.choice([0, 0, 0, -90, 90]) if i > 1 else 0
         steps.append(Step(type=kind, width=round(size[0], 1), height=round(size[1], 1), depth=round(size[2], 1),
                           gap=round(gap, 1), rise=round(rise, 1), turn=turn, shift=round(rng.uniform(-3, 3), 1)))
@@ -133,6 +137,44 @@ def min_grapple_for(difficulty, length):
     return min(max(0, difficulty - 1), max(0, (length - 1) // 2))
 
 
+# A hand-built plan, not randomized, that is verified (see the sweep below) to pass validate() for
+# EVERY length (4-38) x difficulty (1-5) combination the argument parser allows: small, minimum-size
+# pieces; flat (rise is always 0 except the final step up onto the goal); no turn/shift at all, so
+# footprints can never overlap or sit above one another; "hard" gaps are exactly jumpGapMax + 0.5,
+# just enough to force grapple_hop instead of jump_ok, spread evenly to hit the required
+# min_grapple_for() count. Used as the last-resort fallback so --mock can never come back empty.
+#
+# Verified by brute-force sweep (Tools/levelgen, run after any change to these numbers or to
+# validate.py's rules):
+#   python -c "
+#   from generate import canonical_plan, min_grapple_for; from layout import expand
+#   from validate import load_profile, validate
+#   prof = load_profile()
+#   fails = [(l, d) for l in range(4, 39) for d in range(1, 6)
+#            if validate(expand(canonical_plan(l, d, prof), prof, 0, {}), prof, min_grapple_for(d, l))[0]]
+#   print('failures:', fails or 'none')"
+def canonical_plan(length, difficulty, prof):
+    want = min_grapple_for(difficulty, length)
+    n_middle = max(0, length - 2)
+    want = min(want, n_middle)
+
+    hard_positions = set()
+    if want > 0 and n_middle > 0:
+        spacing = n_middle / want
+        for k in range(want):
+            hard_positions.add(min(1 + int(k * spacing), length - 2))
+
+    easy_gap = 0.5
+    hard_gap = prof["jumpGapMax"] + 0.5
+
+    steps = [Step(type="platform", width=3, height=1, depth=3, gap=0, rise=0, turn=0, shift=0)]
+    for i in range(1, length - 1):
+        gap = hard_gap if i in hard_positions else easy_gap
+        steps.append(Step(type="platform", width=3, height=1, depth=3, gap=gap, rise=0, turn=0, shift=0))
+    steps.append(Step(type="goal", width=6, height=1, depth=6, gap=easy_gap, rise=1, turn=0, shift=0))
+    return LevelPlan(name=f"Canonical {length} step d{difficulty}", theme="canonical fallback", steps=steps)
+
+
 def generate_one(args, prof, seed, index):
     want = min_grapple_for(args.difficulty, args.length)
 
@@ -144,7 +186,12 @@ def generate_one(args, prof, seed, index):
             errors, stats = validate(level, prof, want)
             if not errors:
                 return level, stats, attempt + 1
-        return None, None, 200
+        # 200 random attempts can (very rarely) all fail - fall back to the hand-verified plan above
+        # so this path can never come back completely empty.
+        plan = canonical_plan(args.length, args.difficulty, prof)
+        level = expand(plan, prof, seed, {"backend": "mock-canonical"})
+        errors, stats = validate(level, prof, want)
+        return (level, stats, 201) if not errors else (None, None, 201)
 
     messages = [{"role": "system", "content": build_system_prompt(prof)},
                 {"role": "user", "content": build_user_prompt(args)}]
@@ -164,6 +211,12 @@ def generate_one(args, prof, seed, index):
         except (ValidationError, ValueError) as exc:
             feedback = [f"the JSON did not match the schema: {str(exc)[:300]}"]
         print(f"   attempt {attempt} rejected: {feedback[0]}")
+        # Keep the conversation bounded to system + original request + the single most recent
+        # failed reply/feedback pair. Appending every attempt forever used to grow unbounded and
+        # eventually push the system prompt (where "last step must be type goal" etc. live) out of
+        # the model's context window (no num_ctx override here, so it's the model's own default -
+        # 8192 for gemma2), after which it just repeated the same mistake every remaining attempt.
+        del messages[2:]
         messages.append({"role": "assistant", "content": raw})
         messages.append({"role": "user", "content":
                          "That level failed validation:\n- " + "\n- ".join(feedback[:6]) +

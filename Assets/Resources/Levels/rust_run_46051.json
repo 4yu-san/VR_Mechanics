@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "name": "Rust & Run",
+  "theme": "ruined industrial rooftops",
+  "seed": 46051,
+  "start": {
+    "position": [
+      0.0,
+      1.5,
+      0.0
+    ],
+    "yaw": 0
+  },
+  "killFloorY": -40.0,
+  "pieces": [
+    {
+      "id": "p0",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "size": [
+        12.0,
+        1.0,
+        12.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p1",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        13.0
+      ],
+      "size": [
+        8.0,
+        1.0,
+        8.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p2",
+      "type": "wall",
+      "position": [
+        2.0,
+        -7.5,
+        27.5
+      ],
+      "size": [
+        15.0,
+        15.0,
+        1.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p3",
+      "type": "platform",
+      "position": [
+        2.0,
+        -0.5,
+        39.0
+      ],
+      "size": [
+        6.0,
+        1.0,
+        6.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p4",
+      "type": "pillar",
+      "position": [
+        18.5,
+        -7.0,
+        37.0
+      ],
+      "size": [
+        3.0,
+        10.0,
+        3.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p5",
+      "type": "goal",
+      "position": [
+        40.0,
+        -1.5,
+        37.0
+      ],
+      "size": [
+        10.0,
+        1.0,
+        10.0
+      ],
+      "yaw": 90
+    }
+  ],
+  "generator": {
+    "backend": "ollama",
+    "model": "gemma2:9b-instruct-q4_K_M",
+    "difficulty": 1
+  }
+}

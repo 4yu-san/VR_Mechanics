@@ -19,8 +19,11 @@ namespace GeneratedLevels
         [SerializeField]
         private string[] levelFiles =
         {
-            "batch001_level1", "batch001_level2", "batch001_level3", "batch001_level4", "batch001_level5",
-            "batch002_level1", "batch002_level2", "batch002_level3", "batch002_level4", "batch002_level5",
+            // Current batch on disk - all difficulty 1 (no difficulty-4 batch generated yet).
+            // Rename/regenerate and update this list once a harder batch exists.
+            "rusted_ramps_60820", "ruined_skyway_46050", "rust_and_ropes_46256", "rust_run_46051",
+            "rust_steel_48067", "rusty_ascent_46253", "rusty_climb_48070", "rusty_climbs_46257",
+            "rusty_ramble_46052", "rusty_ramble_48069", "rusty_ruins_46048", "rusty_skyline_48071",
         };
 
         [Tooltip("If true, Advance() past the last level loops back to the first instead of stopping.")]

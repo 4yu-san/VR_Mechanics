@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "name": "Rusty Ramble",
+  "theme": "ruined industrial rooftops",
+  "seed": 46052,
+  "start": {
+    "position": [
+      0.0,
+      1.5,
+      0.0
+    ],
+    "yaw": 0
+  },
+  "killFloorY": -42.0,
+  "pieces": [
+    {
+      "id": "p0",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "size": [
+        12.0,
+        1.0,
+        12.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p1",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        13.0
+      ],
+      "size": [
+        8.0,
+        1.0,
+        8.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p2",
+      "type": "pillar",
+      "position": [
+        2.0,
+        -6.5,
+        23.5
+      ],
+      "size": [
+        3.0,
+        15.0,
+        3.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p3",
+      "type": "wall",
+      "position": [
+        2.0,
+        -8.0,
+        35.5
+      ],
+      "size": [
+        12.0,
+        18.0,
+        1.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p4",
+      "type": "platform",
+      "position": [
+        2.0,
+        0.5,
+        40.0
+      ],
+      "size": [
+        6.0,
+        1.0,
+        6.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p5",
+      "type": "pillar",
+      "position": [
+        15.0,
+        -7.0,
+        40.0
+      ],
+      "size": [
+        4.0,
+        10.0,
+        4.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p6",
+      "type": "wall",
+      "position": [
+        23.5,
+        -7.0,
+        40.0
+      ],
+      "size": [
+        15.0,
+        10.0,
+        1.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p7",
+      "type": "goal",
+      "position": [
+        37.0,
+        -1.5,
+        40.0
+      ],
+      "size": [
+        10.0,
+        1.0,
+        10.0
+      ],
+      "yaw": 90
+    }
+  ],
+  "generator": {
+    "backend": "ollama",
+    "model": "gemma2:9b-instruct-q4_K_M",
+    "difficulty": 1
+  }
+}

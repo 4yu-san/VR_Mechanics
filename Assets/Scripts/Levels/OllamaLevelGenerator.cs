@@ -41,7 +41,7 @@ public class OllamaLevelGenerator
         {
             new ChatMessage("system", BuildSystemPrompt(exampleJson)),
             new ChatMessage("user", $"Design a new level.\nRequest: {(string.IsNullOrWhiteSpace(request) ? "a fun, varied level" : request)}\n" +
-                                    "Make it clearly different from the example. Reply with the JSON object only."),
+                                    "Reply with the JSON object only."),
         };
 
         using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(timeoutSeconds) })
@@ -61,7 +61,11 @@ public class OllamaLevelGenerator
                 }
                 result.lastReply = reply;
 
-                var level = LevelData.FromJson(reply);
+                // The model outputs a chain of relative steps (gap/rise/turn/shift), not absolute
+                // coordinates - LevelLayout.Expand() turns that into the same absolute LevelData the
+                // validator/builder always expected. See LevelChain.cs for why.
+                var chain = LevelChain.FromJson(reply);
+                var level = LevelLayout.Expand(chain);
                 level?.Normalize();
                 var check = LevelValidator.Validate(level);
                 if (check.Ok)
@@ -110,6 +114,10 @@ public class OllamaLevelGenerator
 
     // ---------------------------------------------------------------- prompt
 
+    // exampleJson is no longer shown to the model - see CountCopies(), which still compares the final
+    // EXPANDED positions against it to reject a level that's just a re-skin of New Grapple. Showing it
+    // here would be actively misleading now, since the model's own output format is a relative chain,
+    // not absolute coordinates.
     static string BuildSystemPrompt(string exampleJson)
     {
         return
@@ -117,29 +125,42 @@ public class OllamaLevelGenerator
 "\n" +
 "THE GAME: the player stands on a flat start slab and must reach the goal by hopping from platform to platform with a grappling hook.\n" +
 "\n" +
-"COORDINATES (metres): x is the main direction, y is up, z is sideways. The level runs toward NEGATIVE x.\n" +
-"- The start slab is flat, its top surface is at y = -0.75 and it covers x from -3.5 to 7.5, z from -4.5 to 6.9. The player spawns at [0, 0, 0].\n" +
-"- Every platform is the same box (1.39 wide, 0.86 tall, 2.28 long) that cannot be rotated or resized. You only choose each platform's centre \"position\" [x, y, z]. Do not output \"size\" or \"yaw\".\n" +
-"- \"end\" is the goal position [x, y, z], a trigger about 2.4 m wide and 5 m tall.\n" +
+"FORMAT: you do NOT give absolute coordinates. You describe a CHAIN: each platform is placed relative to the one\n" +
+"before it (how big a gap, how much higher/lower, whether to turn, how far sideways). Code turns this into the\n" +
+"real level - you never have to compute or keep track of any x/y/z position yourself.\n" +
 "\n" +
-"RULES (the level is rejected if it breaks one):\n" +
-"1. Use EXACTLY 24 platforms, no more and no fewer.\n" +
-"2. The first platform must be near the start slab: its edge no more than 5 m from x = -3.5 (so around x = -7 to -10, y between 0 and 3).\n" +
-"3. Each platform must be reachable: the gap between the edge of one platform and the edge of another, counting any horizontal and vertical distance, must be at most 5 m. A good step is 3 to 5 m. Every platform should be reachable from the previous ones.\n" +
-"4. The goal \"end\" must be within 5 m of the last platform and reached by a chain of platforms from the start.\n" +
-"5. Platforms must not overlap each other: keep centres at least 3 m apart horizontally, or at least 1.5 m apart vertically.\n" +
-"6. Stay inside |x| <= 120, |z| <= 120 and y between 0 and 25. Nothing may be placed within 2 m of [0, 0, 0]. Never place anything at x > 8.\n" +
-"7. The goal must be at x <= -25 (far toward negative x). The platforms must span at least 3 m in height and at least 6 m sideways (z), so the level is not flat and not a straight line.\n" +
+"{\"name\": \"...\",\n" +
+" \"platforms\": [ {\"gap\": 3, \"rise\": 0.5, \"turn\": 0, \"shift\": 0}, ... exactly 24 of these ... ],\n" +
+" \"goal\": {\"gap\": 4, \"rise\": 1, \"turn\": 0, \"shift\": 0} }\n" +
 "\n" +
-"DESIGN: make it interesting and varied, like the example. Do NOT place platforms at even intervals or in a repeating pattern.\n" +
-"- Vary the step between platforms (mostly 3 to 5 m, sometimes shorter) and mix climbing, dropping and sideways moves.\n" +
-"- Use the sideways direction: spread platforms over z from about -12 to +14, and heights from y = 0.5 up to about 12.\n" +
-"- Include a few features: a tower or stair section, a drop to a lower platform, a wide sideways gap, a small cluster of close platforms.\n" +
-"- The platforms in the JSON list do not have to be in order, but every one must be part of a reachable chain.\n" +
-"- Be creative: do not copy the example's coordinates.\n" +
+"Each step object has exactly these 4 numbers:\n" +
+"- \"gap\": empty space (metres) between this platform and the one before it, along the current heading. 0 or more.\n" +
+"- \"rise\": change in height (metres) versus the platform before it. Negative = drop down.\n" +
+"- \"turn\": -90, 0 or 90. Turns the heading before moving (left, straight, right). Start heading already points\n" +
+"  away from the start slab, so platform 1 normally uses turn 0.\n" +
+"- \"shift\": sideways offset (metres) after turning, positive = right of the heading. Independent of turn - you\n" +
+"  can shift without turning for a gentle sideways drift, or turn without shifting for a sharp corner.\n" +
 "\n" +
-"FORMAT: a JSON object with \"name\", \"platforms\" (array of {\"position\": [x, y, z]}) and \"end\" [x, y, z]. Here is a valid example of a level:\n" +
-exampleJson;
+"The LAST thing in the JSON is \"goal\": one more step, placed the same way after the 24th platform - this becomes\n" +
+"the win trigger the player must reach.\n" +
+"\n" +
+"NUMBERS TO USE (the level is rejected if you go outside these per step):\n" +
+"- gap: usually 2 to 5. Occasionally up to 7 for a hard grapple-only hop (the grapple reaches 25 m, so even a few\n" +
+"  big gaps in a row are fine - just don't make every single one huge).\n" +
+"- rise: usually -3 to 4. Mix ups and downs; don't climb every single step or you'll run out of height budget.\n" +
+"- turn: mostly 0. Use -90/90 only occasionally (roughly 1 in 5 steps at most) - turning often makes the path\n" +
+"  double back into platforms you already placed, which is rejected as an overlap.\n" +
+"- shift: usually -3 to 3, occasionally a bit more for a wide sideways gap.\n" +
+"\n" +
+"DESIGN: make it interesting and varied, not a straight line of identical steps.\n" +
+"- Vary gap and rise together: mix easy short hops, a few long grapple-only gaps, a climbing section, a drop.\n" +
+"- Use shift sometimes so the path isn't perfectly straight, without turning so often that it loops back on itself.\n" +
+"- Across the whole chain, make sure total height varies by at least a few metres (don't keep rise near 0 every\n" +
+"  step) and total sideways shift varies too (don't keep shift at 0 every step).\n" +
+"- Be creative with the overall shape: a tower/stair section, a long straight run, a zig-zag, a cluster of short\n" +
+"  hops followed by one big one.\n" +
+"\n" +
+"Reply with the JSON object only - no \"size\", \"yaw\" or \"position\" fields, no commentary.";
     }
 
     // ---------------------------------------------------------------- Ollama API

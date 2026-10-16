@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "name": "Rusty Climb",
+  "theme": "ruined industrial rooftops",
+  "seed": 48070,
+  "start": {
+    "position": [
+      0.0,
+      1.5,
+      0.0
+    ],
+    "yaw": 0
+  },
+  "killFloorY": -37.2,
+  "pieces": [
+    {
+      "id": "p0",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.75,
+        0.0
+      ],
+      "size": [
+        12.0,
+        1.5,
+        12.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p1",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.7,
+        13.0
+      ],
+      "size": [
+        8.0,
+        1.0,
+        8.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p2",
+      "type": "pillar",
+      "position": [
+        4.0,
+        -4.7,
+        26.5
+      ],
+      "size": [
+        3.0,
+        15.0,
+        3.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p3",
+      "type": "wall",
+      "position": [
+        4.0,
+        -3.2,
+        38.5
+      ],
+      "size": [
+        12.0,
+        12.0,
+        1.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p4",
+      "type": "platform",
+      "position": [
+        4.0,
+        2.3,
+        56.0
+      ],
+      "size": [
+        10.0,
+        1.0,
+        10.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p5",
+      "type": "wall",
+      "position": [
+        15.5,
+        -2.2,
+        56.0
+      ],
+      "size": [
+        6.0,
+        10.0,
+        1.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p6",
+      "type": "pillar",
+      "position": [
+        28.0,
+        -0.2,
+        56.0
+      ],
+      "size": [
+        4.0,
+        18.0,
+        4.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p7",
+      "type": "goal",
+      "position": [
+        47.5,
+        7.3,
+        56.0
+      ],
+      "size": [
+        15.0,
+        1.0,
+        15.0
+      ],
+      "yaw": 90
+    }
+  ],
+  "generator": {
+    "backend": "ollama",
+    "model": "gemma2:9b-instruct-q4_K_M",
+    "difficulty": 1
+  }
+}

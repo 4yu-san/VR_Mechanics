@@ -12,6 +12,60 @@ EditorBuildSettings:
     path: Assets/Scenes/New Grapple.unity
     guid: e49115d0ab34e9c44bc50ebdd3c86ada
   - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 01.unity
+    guid: 8e4d093612bdb564f8205babbed15217
+  - enabled: 1
+    path: Assets/Scenes/Levels/Generated Level 01.unity
+    guid: 4fc693e20e484b140b267bad0aa43137
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 02.unity
+    guid: cd1f82e84e89a6446af3393f110ec072
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 03.unity
+    guid: 6b64daef32005374f87147ca383a9437
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 04.unity
+    guid: 7754616354048ed40a9310fb5f2718a2
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 05.unity
+    guid: e04d02b1f86d7004dbf0808ddcde341e
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 06.unity
+    guid: cfb20a269cd9a0441bde1383c6f37e55
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 07.unity
+    guid: a50b78a6e83742c4ea4267d7e6fad8cc
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 08.unity
+    guid: b67c05aed1eda7a4b833578fbd1c5d8f
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 09.unity
+    guid: 6f7fa172255367e409f0aee1465b0473
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 10.unity
+    guid: 862c2cb7ca23a5844a2a10859ef9e117
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 11.unity
+    guid: 3f8fe286b7781d3458ae657f3f7d5c82
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 12.unity
+    guid: f4b02c8007d15ca429a29554aed29cca
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 13.unity
+    guid: 47152f6c2b7a97046b9619b4d6f92c27
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 14.unity
+    guid: b7539392387cafe40bf822f91274d494
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 15.unity
+    guid: 6ab5025e836ce27478009acf80aafade
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 16.unity
+    guid: b4b11275ff7a4544fbd93fff1ec44853
+  - enabled: 1
+    path: Assets/Scenes/Levels/Multi Goal 17.unity
+    guid: 2ed01f065af732b45ad42eeb43a90aac
+  - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
   m_configObjects:

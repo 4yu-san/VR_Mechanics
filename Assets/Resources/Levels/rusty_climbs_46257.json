@@ -1,0 +1,127 @@
+{
+  "version": 1,
+  "name": "Rusty Climbs",
+  "theme": "ruined industrial rooftops",
+  "seed": 46257,
+  "start": {
+    "position": [
+      0.0,
+      1.5,
+      0.0
+    ],
+    "yaw": 0
+  },
+  "killFloorY": -36.0,
+  "pieces": [
+    {
+      "id": "p0",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        0.0
+      ],
+      "size": [
+        12.0,
+        1.0,
+        12.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p1",
+      "type": "platform",
+      "position": [
+        0.0,
+        -0.5,
+        12.5
+      ],
+      "size": [
+        7.0,
+        1.0,
+        7.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p2",
+      "type": "pillar",
+      "position": [
+        2.0,
+        -3.5,
+        25.5
+      ],
+      "size": [
+        3.0,
+        15.0,
+        3.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p3",
+      "type": "wall",
+      "position": [
+        2.0,
+        -2.0,
+        37.5
+      ],
+      "size": [
+        12.0,
+        12.0,
+        1.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p4",
+      "type": "platform",
+      "position": [
+        2.0,
+        1.5,
+        46.0
+      ],
+      "size": [
+        6.0,
+        1.0,
+        6.0
+      ],
+      "yaw": 0
+    },
+    {
+      "id": "p5",
+      "type": "pillar",
+      "position": [
+        19.0,
+        -1.0,
+        46.0
+      ],
+      "size": [
+        4.0,
+        10.0,
+        4.0
+      ],
+      "yaw": 90
+    },
+    {
+      "id": "p6",
+      "type": "goal",
+      "position": [
+        34.0,
+        3.5,
+        46.0
+      ],
+      "size": [
+        10.0,
+        1.0,
+        10.0
+      ],
+      "yaw": 90
+    }
+  ],
+  "generator": {
+    "backend": "ollama",
+    "model": "gemma2:9b-instruct-q4_K_M",
+    "difficulty": 1
+  }
+}
